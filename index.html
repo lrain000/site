@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>L'Rain – fata morgana</title>
-  <link rel="icon" type="image/png" href="Assets/Images/877344784-l-rain_ochrestore_favicon-3.png">
+  <link rel="icon" type="image/png" href="Assets/Images/icecube_favicon.png">
   <style>
     *, *::before, *::after {
       margin: 0;
@@ -12,31 +12,48 @@
       box-sizing: border-box;
     }
 
+    @font-face {
+      font-family: 'EB Garamond';
+      src: url('Assets/Fonts/EBGaramond.ttf') format('truetype');
+      font-weight: 400 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
     html, body {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #000;
+      /* Pastel fallback if WebGL is unavailable */
+      background: linear-gradient(135deg, #f3c6d8 0%, #cdbfe8 40%, #b9c4ec 70%, #e7cdd6 100%);
     }
 
-    /* ── Video background ── */
-    #video-wrap {
+    /* ── Interactive shader background ── */
+    #bg {
       position: fixed;
       inset: 0;
       z-index: 0;
-      overflow: hidden;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Ice texture layer (enlarged + blended over the haze) ── */
+    #ice {
+      display: none;              /* palette image is now the color source (in the shader) */
+      position: fixed;
+      inset: 0;
+      z-index: 1;                 /* above the shader, below the wordmarks */
+      background: url("Assets/Images/ochrestore_background_1.jpg") center center / cover no-repeat;
+      mix-blend-mode: soft-light; /* soft frosted mottle textured into the haze */
+      opacity: 0.4;               /* texture without washing the haze out */
+      filter: saturate(0.6) contrast(1.05);  /* let some of the warm texture read */
       pointer-events: none;
+      will-change: transform;
+      transform: scale(2.05);     /* JS drives drift + cursor parallax on top of this */
     }
 
-    #player {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      /* width/height set by JS to always cover viewport */
-    }
-
-    /* ── Overlay ── */
+    /* ── Overlay (wordmarks + buttons) ── */
     .overlay {
       position: fixed;
       inset: 0;
@@ -45,20 +62,45 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 2.4vh;
+      gap: 3vh;
+      padding: 11vh 5vw;
+      pointer-events: none;   /* let the mouse reach the shader */
     }
 
-    .wordmark {
-      width: min(42vw, 38vh);
+    .overlay a { pointer-events: auto; }
+
+    .wm-top {
+      width: min(78vw, 680px);
+      max-height: 13vh;
       height: auto;
       display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 26px rgba(80, 40, 90, 0.30));
     }
 
-    .mockup {
-      width: min(48vw, 48vh);
+    /* cover + fata morgana + buttons stay grouped so the text reads as the album's */
+    .center-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.8vh;
+    }
+
+    .cover {
+      width: min(42vw, 36vh, 440px);
       height: auto;
       display: block;
-      filter: drop-shadow(0 8px 40px rgba(0,0,0,0.55));
+      border-radius: 3px;
+      filter: drop-shadow(0 12px 48px rgba(40, 20, 40, 0.5));
+    }
+
+    .wm-bottom {
+      width: min(52vw, 480px);
+      max-height: 9vh;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 26px rgba(80, 40, 90, 0.30));
     }
 
     .btn-group {
@@ -68,23 +110,19 @@
 
     .btn {
       display: inline-block;
-      padding: 0.65em 1.8em;
-      border: 1.5px solid rgba(255,255,255,0.85);
-      border-radius: 999px;
       color: #fff;
       text-decoration: none;
-      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-      font-size: clamp(0.7rem, 1.2vw, 0.9rem);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      background: rgba(0,0,0,0.25);
-      backdrop-filter: blur(6px);
-      transition: background 0.2s, border-color 0.2s;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+      letter-spacing: 0.03em;
+      text-transform: lowercase;
+      text-shadow: 0 1px 14px rgba(70, 40, 80, 0.45);
+      opacity: 0.92;
+      transition: opacity 0.2s;
     }
 
     .btn:hover {
-      background: rgba(255,255,255,0.15);
-      border-color: #fff;
+      opacity: 1;
     }
 
     /* ── Nav ── */
@@ -103,11 +141,12 @@
     nav a {
       color: #fff;
       text-decoration: none;
-      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-      font-size: clamp(0.65rem, 1vw, 0.8rem);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      opacity: 0.85;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: clamp(1rem, 1.6vw, 1.25rem);
+      letter-spacing: 0.03em;
+      text-transform: lowercase;
+      opacity: 0.92;
+      text-shadow: 0 1px 14px rgba(70, 40, 80, 0.45);
       transition: opacity 0.2s;
     }
 
@@ -132,7 +171,8 @@
       display: flex;
       align-items: center;
       color: #fff;
-      opacity: 0.8;
+      opacity: 0.85;
+      filter: drop-shadow(0 1px 10px rgba(70, 40, 80, 0.45));
       transition: opacity 0.2s;
     }
 
@@ -145,16 +185,43 @@
       height: 18px;
       fill: currentColor;
     }
-
   </style>
 </head>
 <body>
+
+  <canvas id="bg"></canvas>
+  <div id="ice"></div>
 
   <nav>
     <a href="https://www.bandsintown.com/a/14715635-l%27rain" target="_blank">Tour</a>
     <a href="https://drop.cobrand.com/d/LRain/signup" target="_blank">Newsletter</a>
     <a href="https://lrain.ochre.store/" target="_blank">Shop</a>
   </nav>
+
+  <div class="overlay">
+    <img
+      class="wm-top"
+      src="Assets/Images/wordmark.png"
+      alt="L'Rain"
+    >
+    <div class="center-block">
+      <img
+        class="cover"
+        src="Assets/Images/cover.jpg"
+        alt="L'Rain – fata morgana album cover"
+      >
+      <img
+        class="wm-bottom"
+        src="Assets/Images/fatamorganawordmark.png"
+        alt="fata morgana"
+      >
+      <div class="btn-group">
+        <a class="btn" href="http://lrain.ffm.to/fatamorgana" target="_blank">Listen</a>
+        <a class="btn" href="https://lrain.ffm.to/fatamorgana/mexicansummer" target="_blank">Buy</a>
+        <a class="btn" href="https://www.youtube.com/watch?v=mjq3UA3HxxA&list=PL8eVhMRcRoqBxJPZ7EffLU9MhjT0-Cmtw&index=1" target="_blank">Watch</a>
+      </div>
+    </div>
+  </div>
 
   <footer class="socials">
     <a href="https://www.instagram.com/turrelljames" target="_blank" aria-label="Instagram">
@@ -171,84 +238,192 @@
     </a>
   </footer>
 
-  <div id="video-wrap">
-    <iframe
-      id="player"
-      src="https://www.youtube.com/embed/UmPlTst22dE?si=8G9XhgROY9bZuOWH&autoplay=1&mute=1&controls=0&disablekb=1&rel=0&showinfo=0&modestbranding=1&iv_load_policy=3&playsinline=1&start=0&end=9&enablejsapi=1"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      referrerpolicy="strict-origin-when-cross-origin"
-      allowfullscreen
-    ></iframe>
-  </div>
-
-  <div class="overlay">
-    <img
-      class="wordmark"
-      src="Assets/Images/L_Rain-fatamorgana_wordmark_combined-2.png"
-      alt="L'Rain – fata morgana"
-    >
-    <img
-      class="mockup"
-      src="Assets/Images/MEX392_L'Rain-fatamorgana_Mockup_01_1x1.png"
-      alt="L'Rain – fata morgana vinyl mockup"
-    >
-    <div class="btn-group">
-      <a class="btn" href="http://lrain.ffm.to/fatamorgana" target="_blank">Listen</a>
-      <a class="btn" href="https://lrain.ffm.to/fatamorgana/mexicansummer" target="_blank">Buy</a>
-      <a class="btn" href="https://www.youtube.com/watch?v=mjq3UA3HxxA&list=PL8eVhMRcRoqBxJPZ7EffLU9MhjT0-Cmtw&index=1" target="_blank">Watch</a>
-    </div>
-  </div>
-
   <script>
-    var player;
-    var LOOP_END = 9;
+  (function () {
+    var canvas = document.getElementById('bg');
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
-    /* ── Compute cover dimensions for 16:9 ── */
-    function coverDims() {
-      var vw = window.innerWidth;
-      var vh = window.innerHeight;
-      var ar = 16 / 9;
-      if (vw / vh > ar) {
-        return { w: vw, h: Math.ceil(vw / ar) };
-      } else {
-        return { w: Math.ceil(vh * ar), h: vh };
+    // No WebGL → keep the CSS gradient fallback on <body>.
+    if (!gl) { canvas.style.display = 'none'; return; }
+
+    var VERT = [
+      'attribute vec2 a_pos;',
+      'void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }'
+    ].join('\n');
+
+    var FRAG = [
+      'precision highp float;',
+      'uniform vec2  u_res;',
+      'uniform float u_time;',
+      'uniform vec2  u_mouse;',
+      'uniform sampler2D u_tex;',
+      'uniform float u_imgAspect;',
+
+      'float hash(vec2 p){',
+      '  p = fract(p * vec2(123.34, 345.45));',
+      '  p += dot(p, p + 34.345);',
+      '  return fract(p.x * p.y);',
+      '}',
+
+      'float noise(vec2 p){',
+      '  vec2 i = floor(p);',
+      '  vec2 f = fract(p);',
+      '  float a = hash(i);',
+      '  float b = hash(i + vec2(1.0, 0.0));',
+      '  float c = hash(i + vec2(0.0, 1.0));',
+      '  float d = hash(i + vec2(1.0, 1.0));',
+      '  vec2 u = f * f * (3.0 - 2.0 * f);',
+      '  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);',
+      '}',
+
+      'float fbm(vec2 p){',
+      '  float v = 0.0;',
+      '  float a = 0.5;',
+      '  mat2 m = mat2(1.6, 1.2, -1.2, 1.6);',
+      '  for(int i = 0; i < 6; i++){',
+      '    v += a * noise(p);',
+      '    p = m * p;',
+      '    a *= 0.5;',
+      '  }',
+      '  return v;',
+      '}',
+
+      'void main(){',
+      // Cover-fit the palette image to the viewport
+      '  vec2 screenUV = gl_FragCoord.xy / u_res.xy;',
+      '  float V = u_res.x / u_res.y;',
+      '  float scaleX = min(V / u_imgAspect, 1.0);',
+      '  float scaleY = min(u_imgAspect / V, 1.0);',
+      '  float panCenter = 0.5 + (0.5 - 0.5 * scaleY) * sin(u_time * 0.035);',   // slow vertical pan through the tall image
+      '  vec2 uv;',
+      '  uv.x = 0.5 + (screenUV.x - 0.5) * scaleX;',
+      '  uv.y = panCenter + (screenUV.y - 0.5) * scaleY;',
+
+      // Domain-warp the sample coords so the image slowly melts + reacts to the cursor
+      '  float t = u_time * 0.03;',
+      '  vec2 p = uv;',
+      '  vec2 q = vec2(fbm(p * 3.0 + t), fbm(p * 3.0 + vec2(5.2, 1.3) - t));',
+      '  vec2 r = vec2(fbm(p * 3.0 + 2.0 * q + vec2(1.7, 9.2) + t * 0.5), fbm(p * 3.0 + 2.0 * q + vec2(8.3, 2.8)));',
+      '  vec2 warp = (r - 0.5) * 0.10 + (u_mouse - 0.5) * 0.05;',
+      '  warp.x *= scaleX; warp.y *= scaleY;',   // keep the melt proportional to the visible band
+
+      '  vec2 suv = clamp(uv + warp, 0.002, 0.998);',
+      '  vec3 col = texture2D(u_tex, suv).rgb;',
+
+      '  float md = distance(screenUV, u_mouse);',
+      '  col += 0.03 * smoothstep(0.4, 0.0, md);',             // gentle glow at the cursor
+
+      '  float g = hash(gl_FragCoord.xy + fract(u_time) * 100.0);',
+      '  col += (g - 0.5) * 0.035;',                           // film grain
+
+      '  col = clamp(col, 0.0, 1.0);',
+      '  gl_FragColor = vec4(col, 1.0);',
+      '}'
+    ].join('\n');
+
+    function compile(type, src){
+      var s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(s));
       }
+      return s;
     }
 
-    /* ── Size iframe to always cover viewport ── */
-    function sizePlayer() {
-      var iframe = document.getElementById('player');
-      if (!iframe) return;
-      var d = coverDims();
-      iframe.style.width  = d.w + 'px';
-      iframe.style.height = d.h + 'px';
-    }
+    var prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
 
-    sizePlayer();
-    window.addEventListener('resize', sizePlayer);
+    // Full-screen triangle
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'a_pos');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-    /* ── YouTube IFrame API callback ── */
-    /* Wrap the existing iframe (so its allow="autoplay" attribute is preserved) */
-    window.onYouTubeIframeAPIReady = function () {
-      player = new YT.Player(document.getElementById('player'), {
-        events: {
-          onStateChange: function (e) {
-            if (e.data === YT.PlayerState.ENDED) {
-              player.seekTo(0, true);
-              player.playVideo();
-            }
-          }
-        }
-      });
+    var uRes       = gl.getUniformLocation(prog, 'u_res');
+    var uTime      = gl.getUniformLocation(prog, 'u_time');
+    var uMouse     = gl.getUniformLocation(prog, 'u_mouse');
+    var uTex       = gl.getUniformLocation(prog, 'u_tex');
+    var uImgAspect = gl.getUniformLocation(prog, 'u_imgAspect');
+
+    // Palette image loaded as a texture — its colours are the whole look
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([230, 150, 130, 255]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    var imgAspect = 1.6;
+    var img = new Image();
+    img.onload = function () {
+      imgAspect = img.width / img.height;
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
     };
+    // Prefer the wide palette image; fall back to the earlier one.
+    img.onerror = function () { img.onerror = null; img.src = 'Assets/Images/palette_bg.jpg'; };
+    img.src = 'Assets/Images/palette_bg2.jpg';
 
-    /* ── Load YouTube IFrame API ── */
-    (function () {
-      var tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      document.head.appendChild(tag);
-    })();
+    // Mouse (smoothed), starts centred
+    var mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+    function setTarget(cx, cy){
+      mouse.tx = cx / window.innerWidth;
+      mouse.ty = 1.0 - cy / window.innerHeight;   // flip to GL space
+    }
+    window.addEventListener('mousemove', function (e) { setTarget(e.clientX, e.clientY); });
+    window.addEventListener('touchmove', function (e) {
+      if (e.touches[0]) setTarget(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    var DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+    function resize(){
+      var w = Math.floor(window.innerWidth  * DPR);
+      var h = Math.floor(window.innerHeight * DPR);
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+      gl.viewport(0, 0, w, h);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    var running = true;
+    document.addEventListener('visibilitychange', function () {
+      running = !document.hidden;
+      if (running) requestAnimationFrame(frame);
+    });
+
+    var start = null;
+    function frame(ts){
+      if (!running) return;
+      if (start === null) start = ts;
+      var time = (ts - start) / 1000;
+
+      mouse.x += (mouse.tx - mouse.x) * 0.025;
+      mouse.y += (mouse.ty - mouse.y) * 0.025;
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.uniform1i(uTex, 0);
+      gl.uniform1f(uImgAspect, imgAspect);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform1f(uTime, time);
+      gl.uniform2f(uMouse, mouse.x, mouse.y);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
   </script>
 
 </body>
