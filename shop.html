@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>L'Rain – Shop</title>
   <link rel="icon" type="image/png" href="Assets/Images/icecube_favicon.png">
+  <link rel="stylesheet" href="Assets/css/ochre-widgets.css">
+  <link rel="stylesheet" href="Assets/css/modal.css">
   <style>
     *, *::before, *::after {
       margin: 0;
@@ -59,23 +61,37 @@
       padding: 1.6rem 6.5rem 1.6rem 1rem;   /* right padding clears the cart dock */
     }
 
-    nav a {
+    nav a,
+    nav button,
+    /* .as-link (modal.css) resets border+padding at 0,0,1,1 — this
+       out-specifies it so the newsletter button underlines too. */
+    nav button.as-link {
       color: #fff;
       text-decoration: none;
+      font-family: inherit;
       font-size: clamp(1rem, 1.6vw, 1.25rem);
       letter-spacing: 0.03em;
       text-transform: lowercase;
       opacity: 0.92;
       text-shadow: 0 1px 14px rgba(70, 40, 80, 0.45);
-      transition: opacity 0.2s;
+      /* Transparent border reserves the underline's space so hovering only
+         changes its colour and the row never shifts. */
+      border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+      transition: opacity 0.2s, border-color 0.2s;
     }
 
-    nav a:hover { opacity: 1; }
+    nav a:hover,
+    nav button:hover,
+    nav button.as-link:hover {
+      opacity: 1;
+      border-bottom-color: rgba(255, 255, 255, 0.7);
+    }
 
+    /* Current page keeps the underline permanently */
     nav a[aria-current="page"] {
       opacity: 1;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.7);
-      padding-bottom: 2px;
+      border-bottom-color: rgba(255, 255, 255, 0.7);
     }
 
     /* ── Page content ── */
@@ -157,6 +173,24 @@
       gap: 0.6rem;
     }
 
+    /* Cover art sits beside the title so each back-catalogue release reads
+       as an album rather than a bare list of formats. */
+    .release-head {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .release-art {
+      width: 74px;
+      height: 74px;
+      flex-shrink: 0;
+      display: block;
+      border-radius: 3px;
+      object-fit: cover;
+      filter: drop-shadow(0 6px 22px rgba(40, 20, 40, 0.45));
+    }
+
     .release-title {
       font-size: clamp(1.15rem, 2vw, 1.45rem);
       font-weight: 400;
@@ -175,153 +209,6 @@
       box-shadow: 0 10px 40px rgba(40, 20, 45, 0.22);
     }
 
-    /* ══════════════════════════════════════════════════════════
-       Ochre widget styling.
-
-       The embed library INJECTS ITS OWN STYLESHEET at runtime, and
-       because it lands after this one in the document it wins every
-       equal-specificity contest. Its defaults are a light theme built on
-       floats (.ochre-product-*-wrapper are float:left; width:50%) with
-       black text and hairline black borders — all wrong over the shader.
-
-       So every rule below is deliberately scoped under .panel or
-       .cart-dock. That extra class outranks the library's single-class
-       selectors without needing !important, which is reserved here for
-       the two cases that must beat an inline style.
-       ══════════════════════════════════════════════════════════ */
-
-    .panel .ochre-product-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      margin: 0;
-      padding: 0;
-    }
-
-    .panel li.ochre-product {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 1.25rem;
-      padding: 0.95rem 0;
-      border-top: none;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-    }
-
-    .panel .ochre-product-list li:first-child { border-top: none; }
-    .panel li.ochre-product:last-child { border-bottom: none; }
-
-    /* The library's clearfix would become a stray flex item */
-    .panel .ochre-product-list li::after { display: none; }
-
-    /* Undo the library's float/50% grid so flex controls the row */
-    .panel .ochre-product-format-wrapper {
-      float: none;
-      width: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
-      min-width: 0;
-    }
-
-    .panel .ochre-product-format {
-      font-size: clamp(1.02rem, 1.7vw, 1.2rem);
-      font-weight: 400;
-      letter-spacing: 0.02em;
-    }
-
-    .panel .ochre-product-release-date,
-    .panel .ochre-product-preorder-flag {
-      font-size: 0.8rem;
-      letter-spacing: 0.05em;
-      text-transform: lowercase;
-      opacity: 0.62;
-    }
-
-    .panel .ochre-product-preorder-flag { margin-right: 0; }
-
-    /* The library leaves .ochre-product-variant empty and renders only the
-       format name — which makes the two vinyl variants of a release read as
-       an identical "Vinyl" at different prices. These fill in the difference.
-       Collapsed by default so uncaptioned rows (MP3, WAV) don't reserve a
-       blank line. :empty can't do this job — the captions are ::after
-       content, which leaves the span itself empty either way. */
-    .panel .ochre-product-variant {
-      display: none;
-      font-size: 0.86rem;
-      letter-spacing: 0.05em;
-      text-transform: lowercase;
-      opacity: 0.72;
-    }
-
-    /* The library gives every variant span a `content: "\a "` newline;
-       the per-product rules below replace it with a real caption. */
-    #ochre-product-201989153 .ochre-product-variant,
-    #ochre-product-201989152 .ochre-product-variant,
-    #ochre-product-201369620 .ochre-product-variant,
-    #ochre-product-201369624 .ochre-product-variant,
-    #ochre-product-201298031 .ochre-product-variant,
-    #ochre-product-201298032 .ochre-product-variant { display: block; }
-
-    #ochre-product-201989153 .ochre-product-variant::after { content: "Rose of Jericho Glow — limited, store exclusive"; }
-    #ochre-product-201989152 .ochre-product-variant::after { content: "Black vinyl"; }
-    #ochre-product-201369620 .ochre-product-variant::after { content: "Oxblood"; }
-    #ochre-product-201369624 .ochre-product-variant::after { content: "Black vinyl"; }
-    #ochre-product-201298031 .ochre-product-variant::after { content: "Black vinyl"; }
-    #ochre-product-201298032 .ochre-product-variant::after { content: "Crystal Waters Green"; }
-
-    .panel .ochre-product-price-wrapper {
-      float: none;
-      width: auto;
-      display: flex;
-      align-items: center;
-      gap: 0.9rem;
-      flex-shrink: 0;
-    }
-
-    .panel .ochre-product-price {
-      font-size: clamp(1rem, 1.6vw, 1.15rem);
-      margin-right: 0;
-      opacity: 0.95;
-      white-space: nowrap;
-    }
-
-    .panel a.ochre-buy-button {
-      display: inline-block;
-      color: #fff;
-      text-decoration: none;
-      font-family: inherit;
-      font-size: 0.95rem;
-      letter-spacing: 0.04em;
-      text-transform: lowercase;
-      white-space: nowrap;
-      padding: 0.4rem 1.05rem;
-      border: 1px solid rgba(255, 255, 255, 0.55);
-      border-radius: 100px;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .panel a.ochre-buy-button:hover {
-      background: rgba(255, 255, 255, 0.16);
-      border-color: rgba(255, 255, 255, 0.85);
-    }
-
-    /* Sold out: the library keeps the same <a> but adds
-       .ochre-buy-button-disabled and swaps the label to "Out of stock".
-       Both classes sit on one element, so this needs to outrank
-       `.panel a.ochre-buy-button` (0,0,2,1) — hence both classes here. */
-    .panel a.ochre-buy-button.ochre-buy-button-disabled {
-      border-color: rgba(255, 255, 255, 0.22);
-      color: rgba(255, 255, 255, 0.55);
-      pointer-events: none;   /* it's an href="#" that would jump to the top */
-    }
-
-    .panel li.ochre-product:has(a.ochre-buy-button-disabled) { opacity: 0.6; }
-
-    /* One "powered by Ochre" credit is fine; four is noise. Hidden per-list,
-       reinstated once in the page footer. */
-    .panel .ochre-products-store-name { display: none; }
-
     /* ── Cart dock (fixed, top right) ── */
     .cart-dock {
       position: fixed;
@@ -334,181 +221,6 @@
       align-items: flex-end;
       gap: 0.5rem;
     }
-
-    /* The library injects the toggle and the panel inside our placeholder,
-       so the placeholder — not .cart-dock — is the real flex parent. It has
-       to span the dock's full width, otherwise it shrink-wraps to the toggle
-       pill and the panel's width:100% collapses to match it.
-       The library also sets Helvetica + a 40px bottom margin here. */
-    .cart-dock .ochre-cart-container {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.5rem;
-      font: inherit;
-      margin-bottom: 0;
-    }
-
-    .cart-dock a.ochre-cart-toggle {
-      display: inline-block;
-      color: #fff;
-      text-decoration: none;
-      font-size: 1rem;
-      letter-spacing: 0.04em;
-      text-transform: lowercase;
-      padding: 0.45rem 1.1rem;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      border-radius: 100px;
-      background: rgba(38, 18, 42, 0.4);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: background 0.2s;
-    }
-
-    .cart-dock a.ochre-cart-toggle:hover { background: rgba(38, 18, 42, 0.62); }
-
-    .cart-dock .ochre-cart-count {
-      min-width: 1.35em;
-      margin-left: 0.3rem;
-      padding: 0 0.32em;
-      border-radius: 100px;
-      background-color: rgba(255, 255, 255, 0.92);
-      color: #4a2144;
-      font-size: 0.82rem;
-      text-align: center;
-    }
-
-    /* The library positions this absolutely (top:20px; left:0) against the
-       container it made relative. Static keeps it in our flex column instead. */
-    .cart-dock .ochre-cart {
-      position: static;
-      width: 100%;
-      margin-top: 0;
-      background-color: rgba(34, 16, 38, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 6px;
-      backdrop-filter: blur(18px) saturate(1.1);
-      -webkit-backdrop-filter: blur(18px) saturate(1.1);
-      padding: 1rem 1.1rem;
-      box-shadow: 0 16px 50px rgba(30, 14, 34, 0.5);
-      font-size: 0.95rem;
-    }
-
-    /* The library drives this panel with an INLINE style, toggling
-       display:table (open) / display:none (closed) from the basket link.
-       Inline beats a normal stylesheet rule, so `table` would otherwise
-       reshape our panel into a table box. Hidden by default, forced back
-       to block whenever the library has opened it. */
-    .cart-dock .ochre-cart { display: none; }
-    .cart-dock .ochre-cart[style*="table"] { display: block !important; }
-
-    /* Nothing in the basket → stay collapsed even if toggled open.
-       Author !important is the one thing that outranks an inline style. */
-    .cart-dock .ochre-cart:has(.ochre-cart-list:empty) { display: none !important; }
-
-    .cart-dock .ochre-cart-table {
-      width: 100%;
-      border-collapse: collapse;
-      border-spacing: 0;
-      text-align: left;
-    }
-
-    .cart-dock .ochre-cart-table th {
-      font-weight: 400;
-      font-size: 0.76rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      opacity: 0.6;
-      padding: 0 0 0.4rem 0;
-    }
-
-    /* Library default is a black bottom hairline — invisible on a dark panel */
-    .cart-dock .ochre-cart-table td {
-      padding: 0.5rem 0.4rem 0.5rem 0;
-      border-bottom: none;
-      border-top: 1px solid rgba(255, 255, 255, 0.13);
-      vertical-align: middle;
-    }
-
-    .cart-dock .ochre-cart-table tr:first-child td {
-      border-top: 1px solid rgba(255, 255, 255, 0.13);
-    }
-
-    .cart-dock .ochre-cart-table td:first-child { padding-left: 0; }
-    .cart-dock .ochre-cart-table td:last-child  { padding-right: 0; }
-
-    .cart-dock .ochre-cart-artist { opacity: 0.7; }
-    .cart-dock .ochre-cart-format { opacity: 0.8; font-size: 0.9rem; }
-    .cart-dock .ochre-cart-price  { white-space: nowrap; text-align: right; }
-
-    .cart-dock input.ochre-cart-quantity {
-      width: 3.2rem;
-      padding: 0.22rem 0.35rem;
-      font-family: inherit;
-      font-size: 0.9rem;
-      color: #fff;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 3px;
-    }
-
-    .cart-dock a.ochre-cart-delete-button {
-      color: #fff;
-      opacity: 0.6;
-      font-size: 0.85rem;
-      text-transform: lowercase;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-      white-space: nowrap;
-    }
-
-    .cart-dock a.ochre-cart-delete-button:hover { opacity: 1; }
-
-    .cart-dock .ochre-cart-total-wrapper {
-      padding-top: 0.75rem;
-      font-size: 1.05rem;
-    }
-
-    .cart-dock .ochre-cart-shipping-message {
-      font-size: 0.85rem;
-      opacity: 0.65;
-      margin-left: 0.3rem;
-    }
-
-    .cart-dock a.ochre-checkout-button {
-      display: block;
-      margin-top: 0.85rem;
-      padding: 0.6rem 1rem;
-      text-align: center;
-      color: #40173c;
-      background: rgba(255, 255, 255, 0.94);
-      border: 1px solid transparent;
-      border-radius: 100px;
-      text-decoration: none;
-      font-size: 1rem;
-      letter-spacing: 0.05em;
-      text-transform: lowercase;
-      transition: background 0.2s;
-    }
-
-    .cart-dock a.ochre-checkout-button:hover { background: #fff; }
-
-    /* Checkout completes on the Ochre store, so say so rather than surprise people */
-    .cart-dock .ochre-cart-store-name {
-      margin-top: 0.6rem;
-      font-size: 0.78rem;
-      letter-spacing: 0.03em;
-      opacity: 0.6;
-      text-align: center;
-    }
-
-    .cart-dock .ochre-cart-empty-message { margin: 0; opacity: 0.7; }
-
-    .cart-dock .ochre-cart-store-name a,
-    .panel .ochre-products-store-name a { color: #fff; }
-
-    .cart-dock .ochre-cart iframe.cart-check-if { display: none; }
 
     /* ── Fallback if the embed library is blocked (ad-blockers, offline) ── */
     #embed-fallback {
@@ -590,15 +302,21 @@
         align-items: stretch;
       }
 
-      a.ochre-cart-toggle { text-align: center; }
+      .cart-dock a.ochre-cart-toggle { text-align: center; }
 
-      li.ochre-product {
+      /* These need the .panel prefix for the same reason every rule in
+         ochre-widgets.css does — the library's own sheet loads later and
+         sets width:50% on the wrappers. */
+      .panel li.ochre-product {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.55rem;
       }
 
-      .ochre-product-price-wrapper { width: 100%; justify-content: space-between; }
+      .panel .ochre-product-price-wrapper {
+        width: 100%;
+        justify-content: space-between;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -611,9 +329,8 @@
   <canvas id="bg"></canvas>
 
   <nav>
-    <a href="index.html">Home</a>
-    <a href="https://www.bandsintown.com/a/14715635-l%27rain" target="_blank" rel="noopener">Tour</a>
-    <a href="https://drop.cobrand.com/d/LRain/signup" target="_blank" rel="noopener">Newsletter</a>
+    <a href="tour.html">Tour</a>
+    <button type="button" class="as-link" data-modal-open="modal-newsletter">Newsletter</button>
     <a href="shop.html" aria-current="page">Shop</a>
   </nav>
 
@@ -642,23 +359,24 @@
       <h2 class="section-heading" id="cat-heading">More from L'Rain</h2>
 
       <div class="release">
-        <h3 class="release-title">I Killed Your Dog</h3>
+        <div class="release-head">
+          <img class="release-art" src="Assets/Images/ikyd_cover.jpg"
+               alt="L'Rain – I Killed Your Dog album cover" width="500" height="500">
+          <h3 class="release-title">I Killed Your Dog</h3>
+        </div>
         <div class="panel">
           <div class="ochre-list-ikyd"></div>
         </div>
       </div>
 
       <div class="release">
-        <h3 class="release-title">Fatigue</h3>
+        <div class="release-head">
+          <img class="release-art" src="Assets/Images/fatigue_cover.jpg"
+               alt="L'Rain – Fatigue album cover" width="500" height="500">
+          <h3 class="release-title">Fatigue</h3>
+        </div>
         <div class="panel">
           <div class="ochre-list-fatigue"></div>
-        </div>
-      </div>
-
-      <div class="release">
-        <h3 class="release-title">New Year's UnResolution</h3>
-        <div class="panel">
-          <div class="ochre-list-nyu"></div>
         </div>
       </div>
     </section>
@@ -689,7 +407,24 @@
     </footer>
   </main>
 
+  <!-- Newsletter signup. The iframe is declared, not written — modals.js
+       injects it on first open so nothing loads from cobrand until asked. -->
+  <div class="modal" id="modal-newsletter" hidden aria-hidden="true"
+       role="dialog" aria-modal="true" aria-labelledby="nl-title-shop">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel is-frame">
+      <div class="modal-head">
+        <h2 class="modal-title" id="nl-title-shop">Newsletter</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body is-frame"
+           data-iframe-src="https://drop.cobrand.com/d/LRain/signup/embed?form_only=true"
+           data-iframe-title="L'Rain newsletter signup"></div>
+    </div>
+  </div>
+
   <script src="Assets/js/background.js"></script>
+  <script src="Assets/js/modals.js"></script>
 
   <!-- Ochre embed library, served from the L'Rain store -->
   <script type="text/javascript" src="https://lrain.ochre.store/cart/embed/library"></script>
@@ -701,8 +436,7 @@
     var LISTS = [
       ['.ochre-list-fatamorgana', [201989153, 201989152, 201989150, 201994028]],
       ['.ochre-list-ikyd',        [201369620, 201369624, 201369621, 201369622]],
-      ['.ochre-list-fatigue',     [201298031, 201298032, 201298028, 201298029]],
-      ['.ochre-list-nyu',         [201299522, 201299521]]
+      ['.ochre-list-fatigue',     [201298031, 201298032, 201298028, 201298029]]
     ];
 
     if (typeof window.buy === 'undefined') {

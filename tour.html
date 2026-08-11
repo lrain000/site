@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L'Rain – Tour</title>
+  <link rel="icon" type="image/png" href="Assets/Images/icecube_favicon.png">
+  <link rel="stylesheet" href="Assets/css/modal.css">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @font-face {
+      font-family: 'EB Garamond';
+      src: url('Assets/Fonts/EBGaramond.ttf') format('truetype');
+      font-weight: 400 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      /* Pastel fallback if WebGL is unavailable */
+      background: linear-gradient(135deg, #f3c6d8 0%, #cdbfe8 40%, #b9c4ec 70%, #e7cdd6 100%);
+      font-family: 'EB Garamond', Georgia, serif;
+      color: #fff;
+    }
+
+    body {
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Interactive shader background (shared with the other pages) ── */
+    #bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2.5rem;
+      padding: 1.6rem 1rem;
+    }
+
+    nav a,
+    nav button,
+    /* .as-link (modal.css) resets border+padding at 0,0,1,1 — this
+       out-specifies it so the newsletter button underlines too. */
+    nav button.as-link {
+      color: #fff;
+      text-decoration: none;
+      font-family: inherit;
+      font-size: clamp(1rem, 1.6vw, 1.25rem);
+      letter-spacing: 0.03em;
+      text-transform: lowercase;
+      opacity: 0.92;
+      text-shadow: 0 1px 14px rgba(70, 40, 80, 0.45);
+      /* Transparent border reserves the underline's space so hovering only
+         changes its colour and the row never shifts. */
+      border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+
+    nav a:hover,
+    nav button:hover,
+    nav button.as-link:hover {
+      opacity: 1;
+      border-bottom-color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Current page keeps the underline permanently */
+    nav a[aria-current="page"] {
+      opacity: 1;
+      border-bottom-color: rgba(255, 255, 255, 0.7);
+    }
+
+    nav a:focus-visible,
+    nav button:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.8);
+      outline-offset: 3px;
+    }
+
+    /* ── Page content ── */
+    main {
+      position: relative;
+      z-index: 10;
+      /* Wider than the other pages: the Bandsintown widget switches to its
+         stacked mobile layout when its CONTAINER (not the viewport) is
+         narrower than data-layout-breakpoint. */
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 7.5rem 1.5rem 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2.5rem;
+    }
+
+    .wm-top {
+      width: min(78vw, 520px);
+      height: auto;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 26px rgba(80, 40, 90, 0.30));
+    }
+
+    .page-title {
+      font-size: clamp(1rem, 1.6vw, 1.15rem);
+      font-weight: 400;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      text-align: center;
+      opacity: 0.75;
+      text-shadow: 0 1px 14px rgba(70, 40, 80, 0.45);
+    }
+
+    /* ── Frosted panel hosting the Bandsintown widget ── */
+    .panel {
+      width: 100%;
+      background: rgba(38, 18, 42, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 6px;
+      backdrop-filter: blur(12px) saturate(1.1);
+      -webkit-backdrop-filter: blur(12px) saturate(1.1);
+      padding: 0.5rem 1.25rem 1rem;
+      box-shadow: 0 10px 40px rgba(40, 20, 45, 0.22);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       Bandsintown widget styling.
+
+       The widget renders inline into the page (no iframe, no shadow
+       DOM) but injects its own ~244-rule stylesheet at runtime. That
+       lands after this block, so it wins equal-specificity contests —
+       every rule below is therefore scoped under .bit-scope to
+       outrank its single-class selectors.
+
+       Its data-* attributes only accept solid hex colours, so the
+       transparent/Garamond treatment has to come from here.
+       ══════════════════════════════════════════════════════════ */
+
+    .bit-scope .bit-widget,
+    .bit-scope .bit-widget-container,
+    .bit-scope .bit-events-container,
+    .bit-scope .bit-upcoming-events-container,
+    .bit-scope .bit-event-lists {
+      background: transparent;
+      font-family: 'EB Garamond', Georgia, serif;
+      color: #fff;
+    }
+
+    .bit-scope .bit-widget * {
+      font-family: 'EB Garamond', Georgia, serif !important;
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    /* Event rows: hairline dividers instead of the widget's grey blocks */
+    .bit-scope .bit-event {
+      background: transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 0.85rem 0;
+    }
+
+    .bit-scope .bit-event:last-child { border-bottom: none; }
+
+    .bit-scope .bit-event:hover { background: rgba(255, 255, 255, 0.04); }
+
+    .bit-scope .bit-date,
+    .bit-scope .bit-mobile-date {
+      color: #fff;
+      background: transparent;
+      border: none;
+      font-size: 0.95rem;
+      letter-spacing: 0.03em;
+      opacity: 0.85;
+    }
+
+    .bit-scope .bit-titleWrapper,
+    .bit-scope .bit-venue {
+      color: #fff;
+      font-size: 1.05rem;
+      letter-spacing: 0.02em;
+    }
+
+    .bit-scope .bit-location-under-desktop,
+    .bit-scope .bit-location-under-mobile {
+      color: #fff;
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+
+    .bit-scope .bit-event-list-title,
+    .bit-scope .bit-nav-bar,
+    .bit-scope .bit-nav-bar-container {
+      color: #fff;
+      background: transparent;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      opacity: 0.65;
+    }
+
+    /* All CTAs become the site's outline pills */
+    .bit-scope .bit-button,
+    .bit-scope .bit-multi-ticket-button,
+    .bit-scope .bit-follow-section-cta,
+    .bit-scope .bit-play-my-city-cta {
+      color: #fff !important;
+      background: transparent !important;
+      border: 1px solid rgba(255, 255, 255, 0.55) !important;
+      border-radius: 100px !important;
+      padding: 0.38rem 1.05rem !important;
+      font-size: 0.9rem !important;
+      letter-spacing: 0.05em;
+      text-transform: lowercase;
+      box-shadow: none !important;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .bit-scope .bit-button:hover,
+    .bit-scope .bit-multi-ticket-button:hover,
+    .bit-scope .bit-follow-section-cta:hover,
+    .bit-scope .bit-play-my-city-cta:hover {
+      background: rgba(255, 255, 255, 0.16) !important;
+      border-color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    /* The two prompt blocks read as quiet asides, not banners */
+    .bit-scope .bit-follow-section-wrapper,
+    .bit-scope .bit-play-my-city-wrapper {
+      background: transparent;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 1.1rem 0 0.4rem;
+      margin-top: 0.6rem;
+    }
+
+    .bit-scope .bit-follow-section-heading-text,
+    .bit-scope .bit-play-my-city-heading-text {
+      color: #fff;
+      opacity: 0.75;
+      font-size: 0.98rem;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.6rem;
+    }
+
+    .bit-scope .bit-offers,
+    .bit-scope .bit-offers-text,
+    .bit-scope .bit-rsvp,
+    .bit-scope .bit-rsvp-text,
+    .bit-scope .bit-details {
+      color: #fff;
+      background: transparent;
+    }
+
+    .bit-scope .bit-logo-link { opacity: 0.5; }
+    .bit-scope .bit-logo-link:hover { opacity: 0.85; }
+
+    /* While the widget is fetching, and if it never arrives */
+    #tour-status {
+      padding: 1.5rem 0.5rem;
+      text-align: center;
+      font-size: 0.95rem;
+      letter-spacing: 0.03em;
+      opacity: 0.7;
+    }
+
+    #tour-status a {
+      color: #fff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* ── Footer ── */
+    .page-footer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.1rem;
+      padding-top: 1rem;
+    }
+
+    .socials {
+      display: flex;
+      justify-content: center;
+      gap: 1.8rem;
+    }
+
+    .socials a {
+      display: flex;
+      align-items: center;
+      color: #fff;
+      opacity: 0.85;
+      filter: drop-shadow(0 1px 10px rgba(70, 40, 80, 0.45));
+      transition: opacity 0.2s;
+    }
+
+    .socials a:hover { opacity: 1; }
+
+    .socials svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 1.2rem 1rem; gap: 1.6rem; }
+      main { padding-top: 5.5rem; gap: 1.8rem; }
+      .panel { padding: 0.5rem 0.85rem 1rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #bg { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="bg"></canvas>
+
+  <nav>
+    <a href="tour.html" aria-current="page">Tour</a>
+    <button type="button" class="as-link" data-modal-open="modal-newsletter">Newsletter</button>
+    <a href="shop.html">Shop</a>
+  </nav>
+
+  <main>
+    <a href="index.html" aria-label="L'Rain — home">
+      <img class="wm-top" src="Assets/Images/wordmark.png" alt="L'Rain">
+    </a>
+
+    <h1 class="page-title">Tour Dates</h1>
+
+    <div class="panel">
+      <div class="bit-scope">
+        <p id="tour-status">Loading tour dates&hellip;</p>
+
+        <a class="bit-widget-initializer"
+          data-artist-name="id_14715635"
+          data-background-color="transparent"
+          data-separator-color="#FFFFFF"
+          data-text-color="#FFFFFF"
+          data-font="Georgia"
+          data-auto-style="false"
+
+          data-button-label-capitalization="capitalize"
+          data-location-capitalization="capitalize"
+          data-venue-capitalization="capitalize"
+          data-local-dates-position="tab"
+          data-social-share-icon="true"
+          data-display-limit="all"
+
+          data-date-format="MMM. D, YYYY"
+          data-date-orientation="horizontal"
+          data-date-border-color="#FFFFFF"
+          data-date-border-width="0px"
+          data-date-border-radius="10px"
+
+          data-event-ticket-cta-size="medium"
+          data-event-ticket-text="TICKETS"
+          data-event-ticket-cta-text-color="#FFFFFF"
+          data-event-ticket-cta-bg-color="transparent"
+          data-event-ticket-cta-border-color="#FFFFFF"
+          data-event-ticket-cta-border-width="1px"
+          data-event-ticket-cta-border-radius="100px"
+
+          data-sold-out-button-text-color="#FFFFFF"
+          data-sold-out-button-background-color="transparent"
+          data-sold-out-button-border-color="#FFFFFF"
+          data-sold-out-button-clickable="true"
+
+          data-event-rsvp-position="left"
+          data-event-rsvp-cta-size="medium"
+          data-event-rsvp-text="REMIND ME"
+          data-event-rsvp-cta-text-color="#FFFFFF"
+          data-event-rsvp-cta-bg-color="transparent"
+          data-event-rsvp-cta-border-color="#FFFFFF"
+          data-event-rsvp-cta-border-width="1px"
+          data-event-rsvp-cta-border-radius="100px"
+
+          data-follow-section-position="top"
+          data-follow-section-alignment="center"
+          data-follow-section-header-text="Get updates on new shows, new music, and more."
+          data-follow-section-cta-size="medium"
+          data-follow-section-cta-text="FOLLOW"
+          data-follow-section-cta-icon="true"
+          data-follow-section-cta-text-color="#FFFFFF"
+          data-follow-section-cta-bg-color="transparent"
+          data-follow-section-cta-border-color="#FFFFFF"
+          data-follow-section-cta-border-width="1px"
+          data-follow-section-cta-border-radius="100px"
+
+          data-play-my-city-position="bottom"
+          data-play-my-city-alignment="Center"
+          data-play-my-city-header-text="Don&rsquo;t see a show near you?"
+          data-play-my-city-cta-size="medium"
+          data-play-my-city-cta-text="REQUEST A SHOW"
+          data-play-my-city-cta-icon="true"
+          data-play-my-city-cta-text-color="#FFFFFF"
+          data-play-my-city-cta-bg-color="transparent"
+          data-play-my-city-cta-border-color="#FFFFFF"
+          data-play-my-city-cta-border-width="1px"
+          data-play-my-city-cta-border-radius="100px"
+
+          data-language="en"
+          data-layout-breakpoint="700"
+          data-app-id="ea47ba0b0efe5ba700d398762362e149"
+          data-bit-logo-position="bottomRight"
+          data-bit-logo-color="#FFFFFF"
+        ></a>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <div class="socials">
+        <a href="https://www.instagram.com/turrelljames" target="_blank" rel="noopener" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+        <a href="https://x.com/lrain0000?lang=en" target="_blank" rel="noopener" aria-label="Twitter / X">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="https://www.youtube.com/@lrain" target="_blank" rel="noopener" aria-label="YouTube">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </a>
+        <a href="https://open.spotify.com/artist/68BVYIej5jGdIh8au5qELn" target="_blank" rel="noopener" aria-label="Spotify">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        </a>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ── Newsletter modal (iframe injected on first open by modals.js) ── -->
+  <div class="modal" id="modal-newsletter" hidden aria-hidden="true"
+       role="dialog" aria-modal="true" aria-labelledby="nl-title-tour">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel is-frame">
+      <div class="modal-head">
+        <h2 class="modal-title" id="nl-title-tour">Newsletter</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body is-frame"
+           data-iframe-src="https://drop.cobrand.com/d/LRain/signup/embed?form_only=true"
+           data-iframe-title="L'Rain newsletter signup"></div>
+    </div>
+  </div>
+
+  <script src="Assets/js/background.js"></script>
+  <script src="Assets/js/modals.js"></script>
+
+  <!-- Bandsintown widget -->
+  <script charset="utf-8" src="https://widgetv3.bandsintown.com/main.min.js"></script>
+
+  <script>
+  (function () {
+    // The widget replaces its initializer anchor with the event list. Watch for
+    // that so the loading line can be swapped for a real message if it never
+    // arrives (blocked script, no dates listed).
+    var status = document.getElementById('tour-status');
+    var scope  = document.querySelector('.bit-scope');
+    var tries  = 0;
+
+    var poll = setInterval(function () {
+      tries++;
+      if (scope.querySelector('.bit-event, .bit-widget')) {
+        status.remove();
+        clearInterval(poll);
+      } else if (tries > 20) {          // ~10s
+        status.innerHTML = 'Tour dates couldn’t load here — see them on ' +
+          '<a href="https://www.bandsintown.com/a/14715635-l%27rain" target="_blank" rel="noopener">Bandsintown</a>.';
+        clearInterval(poll);
+      }
+    }, 500);
+  })();
+  </script>
+
+</body>
+</html>

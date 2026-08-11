@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>L'Rain – fata morgana</title>
   <link rel="icon" type="image/png" href="Assets/Images/icecube_favicon.png">
+  <link rel="stylesheet" href="Assets/css/ochre-widgets.css">
+  <link rel="stylesheet" href="Assets/css/modal.css">
   <style>
     *, *::before, *::after {
       margin: 0;
@@ -67,7 +69,8 @@
       pointer-events: none;   /* let the mouse reach the shader */
     }
 
-    .overlay a { pointer-events: auto; }
+    .overlay a,
+    .overlay button { pointer-events: auto; }
 
     .wm-top {
       width: min(78vw, 680px);
@@ -108,6 +111,9 @@
       gap: 1rem;
     }
 
+    /* "buy" is a real button element that opens the shop modal; the others
+       are links.
+       Both share this so the row reads as one set of controls. */
     .btn {
       display: inline-block;
       color: #fff;
@@ -118,11 +124,28 @@
       text-transform: lowercase;
       text-shadow: 0 1px 14px rgba(70, 40, 80, 0.45);
       opacity: 0.92;
-      transition: opacity 0.2s;
+      background: none;
+      padding: 0;
+      cursor: pointer;
+      /* Underline space is reserved up front with a transparent border so
+         hovering only changes its colour — otherwise the row would shift. */
+      border: 0;
+      border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+      transition: opacity 0.2s, border-color 0.2s;
     }
 
     .btn:hover {
       opacity: 1;
+      /* Same underline the nav uses to mark the current page */
+      border-bottom-color: rgba(255, 255, 255, 0.7);
+    }
+
+    .btn:focus-visible,
+    nav a:focus-visible,
+    nav button:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.8);
+      outline-offset: 3px;
     }
 
     /* ── Nav ── */
@@ -138,7 +161,11 @@
       padding: 1.6rem 0;
     }
 
-    nav a {
+    nav a,
+    nav button,
+    /* .as-link (modal.css) resets border+padding at 0,0,1,1 — this
+       out-specifies it so the newsletter button underlines too. */
+    nav button.as-link {
       color: #fff;
       text-decoration: none;
       font-family: 'EB Garamond', Georgia, serif;
@@ -147,11 +174,62 @@
       text-transform: lowercase;
       opacity: 0.92;
       text-shadow: 0 1px 14px rgba(70, 40, 80, 0.45);
-      transition: opacity 0.2s;
+      /* Transparent border reserves the underline's space so hovering only
+         changes its colour and the row never shifts. */
+      border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+      transition: opacity 0.2s, border-color 0.2s;
     }
 
-    nav a:hover {
+    nav a:hover,
+    nav button:hover,
+    nav button.as-link:hover {
       opacity: 1;
+      border-bottom-color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* ── Shop modal internals (widget rules live in ochre-widgets.css) ── */
+    .modal-sub {
+      margin-bottom: 0.9rem;
+      text-align: center;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-transform: lowercase;
+      opacity: 0.72;
+    }
+
+    /* Shared widget CSS is scoped under .panel / .cart-dock. On the shop page
+       the dock is fixed to a corner; inside this modal it just sits in flow. */
+    .modal .panel {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      padding: 0.2rem 1rem;
+    }
+
+    .modal .cart-dock {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+    }
+
+    .modal .cart-dock .ochre-cart-container { align-items: stretch; }
+
+    .modal .cart-dock a.ochre-cart-toggle { text-align: center; }
+
+    @media (max-width: 640px) {
+      .modal .panel li.ochre-product {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.55rem;
+      }
+
+      .modal .panel .ochre-product-price-wrapper {
+        width: 100%;
+        justify-content: space-between;
+      }
     }
 
     /* ── Social icons ── */
@@ -193,8 +271,8 @@
   <div id="ice"></div>
 
   <nav>
-    <a href="https://www.bandsintown.com/a/14715635-l%27rain" target="_blank">Tour</a>
-    <a href="https://drop.cobrand.com/d/LRain/signup" target="_blank">Newsletter</a>
+    <a href="tour.html">Tour</a>
+    <button type="button" class="as-link" data-modal-open="modal-newsletter">Newsletter</button>
     <a href="shop.html">Shop</a>
   </nav>
 
@@ -217,7 +295,7 @@
       >
       <div class="btn-group">
         <a class="btn" href="http://lrain.ffm.to/fatamorgana" target="_blank">Listen</a>
-        <a class="btn" href="https://lrain.ffm.to/fatamorgana/mexicansummer" target="_blank">Buy</a>
+        <button type="button" class="btn" id="buy-btn" data-modal-open="modal-buy">Buy</button>
         <a class="btn" href="https://www.youtube.com/watch?v=mjq3UA3HxxA&list=PL8eVhMRcRoqBxJPZ7EffLU9MhjT0-Cmtw&index=1" target="_blank">Watch</a>
       </div>
     </div>
@@ -238,7 +316,80 @@
     </a>
   </footer>
 
+  <!-- ── Buy modal: the same fata morgana formats as the shop page ── -->
+  <div class="modal" id="modal-buy" hidden aria-hidden="true"
+       role="dialog" aria-modal="true" aria-labelledby="buy-title">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <h2 class="modal-title" id="buy-title">fata morgana</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-sub">out august 14, 2026 · pre-order</p>
+        <div class="panel">
+          <div class="ochre-list-fatamorgana"></div>
+        </div>
+        <!-- The cart embed has to be present alongside the product list -->
+        <div class="cart-dock">
+          <div class="ochre-cart-container"></div>
+        </div>
+        <p class="modal-note" id="buy-note">
+          Checkout completes on
+          <a href="https://lrain.ochre.store/" target="_blank" rel="noopener">lrain.ochre.store</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Newsletter modal (iframe injected on first open by modals.js) ── -->
+  <div class="modal" id="modal-newsletter" hidden aria-hidden="true"
+       role="dialog" aria-modal="true" aria-labelledby="nl-title">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel is-frame">
+      <div class="modal-head">
+        <h2 class="modal-title" id="nl-title">Newsletter</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body is-frame"
+           data-iframe-src="https://drop.cobrand.com/d/LRain/signup/embed?form_only=true"
+           data-iframe-title="L'Rain newsletter signup"></div>
+    </div>
+  </div>
+
   <script src="Assets/js/background.js"></script>
+  <script src="Assets/js/modals.js"></script>
+
+  <!-- Ochre embed library, served from the L'Rain store -->
+  <script type="text/javascript" src="https://lrain.ochre.store/cart/embed/library"></script>
+
+  <script>
+  (function () {
+    // release_format IDs prefixed with 20, same as the shop page
+    var FATA_MORGANA = [201989153, 201989152, 201989150, 201994028];
+
+    // If the library is blocked, "buy" should still go somewhere useful
+    // rather than open an empty dialog.
+    if (typeof window.buy === 'undefined') {
+      var btn = document.getElementById('buy-btn');
+      var link = document.createElement('a');
+      link.className = 'btn';
+      link.href = 'https://lrain.ochre.store/';
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = 'Buy';
+      btn.parentNode.replaceChild(link, btn);
+      return;
+    }
+
+    try {
+      buy.products('.ochre-list-fatamorgana', { style: 'mini' }).get(FATA_MORGANA);
+      buy.cart('.ochre-cart-container');
+    } catch (e) {
+      console.error('Ochre embed failed', e);
+    }
+  })();
+  </script>
 
 </body>
 </html>
