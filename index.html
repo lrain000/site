@@ -157,9 +157,21 @@
       z-index: 20;
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
-      gap: clamp(1rem, 3.2vw, 2.4rem);
-      padding: 1.6rem 1rem;
+      align-items: center;
+      justify-content: space-between;   /* evenly spread, spanning the wordmark width */
+      width: min(80vw, 680px);
+      margin: 0 auto;
+      gap: 0.6rem 1rem;
+      padding: 1.6rem 0;
+    }
+
+    @media (max-width: 640px) {
+      nav {
+        width: auto;
+        justify-content: center;
+        gap: 1rem 1.4rem;
+        padding: 1.2rem 1rem;
+      }
     }
 
     nav a,

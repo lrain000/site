@@ -51,10 +51,13 @@
       right: 0;
       z-index: 30;
       display: flex;
-      justify-content: center;
       flex-wrap: wrap;
-      gap: clamp(1rem, 3.2vw, 2.4rem);
-      padding: 1.6rem 1rem;
+      align-items: center;
+      justify-content: space-between;   /* evenly spread, spanning the wordmark width */
+      width: min(80vw, 680px);
+      margin: 0 auto;
+      gap: 0.6rem 1rem;
+      padding: 1.6rem 0;
     }
 
     nav a {
@@ -166,7 +169,7 @@
     }
 
     @media (max-width: 640px) {
-      nav { padding: 1.2rem 1rem; gap: 1.6rem; }
+      nav { width: auto; justify-content: center; padding: 1.2rem 1rem; gap: 1rem 1.4rem; }
       main { padding-top: 5.5rem; gap: 1.8rem; }
       .nl-frame { height: 78vh; }
     }
