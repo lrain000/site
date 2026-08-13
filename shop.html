@@ -64,6 +64,17 @@
       padding: 1.6rem 0;
     }
 
+    /* Until the viewport is wide enough for the spread nav to clear the cart
+       dock in the corner, keep the links centered so they don't collide. */
+    @media (max-width: 1024px) {
+      nav {
+        width: auto;
+        justify-content: center;
+        gap: 1rem 1.4rem;
+        padding: 1.6rem 1rem;
+      }
+    }
+
     nav a,
     nav button,
     /* .as-link (modal.css) resets border+padding at 0,0,1,1 — this
@@ -223,7 +234,15 @@
       flex-direction: column;
       align-items: flex-end;
       gap: 0.5rem;
+      /* The dock box overlaps the nav; make it click-through so the nav links
+         underneath stay clickable. Only the actual cart toggle and panel
+         (re-enabled below) receive clicks — pointer-events inherits, so the
+         empty container area passes them through. */
+      pointer-events: none;
     }
+
+    .cart-dock .ochre-cart-toggle,
+    .cart-dock .ochre-cart { pointer-events: auto; }
 
     /* ── Fallback if the embed library is blocked (ad-blockers, offline) ── */
     #embed-fallback {
