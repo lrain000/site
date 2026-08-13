@@ -118,11 +118,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3.5rem;
+      gap: 3vh;   /* match the home page's wordmark ↔ cover spacing */
     }
 
     .wm-top {
-      width: min(78vw, 520px);
+      width: min(78vw, 680px);
+      max-height: 13vh;
       height: auto;
       display: block;
       object-fit: contain;
@@ -134,12 +135,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1.4rem;
+      gap: 3.4vh;   /* match the home page's cover ↔ fata morgana spacing */
       width: 100%;
     }
 
     .cover {
-      width: min(60vw, 300px);
+      width: min(42vw, 40vh, 460px);
       height: auto;
       display: block;
       border-radius: 3px;
@@ -147,7 +148,8 @@
     }
 
     .wm-release {
-      width: min(52vw, 360px);
+      width: min(52vw, 480px);
+      max-height: 9vh;
       height: auto;
       display: block;
       object-fit: contain;
@@ -169,6 +171,7 @@
       display: flex;
       flex-direction: column;
       gap: 2.25rem;
+      margin-top: 2rem;   /* keep the section separated after tightening the main gap */
     }
 
     .section-heading {
