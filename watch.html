@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>L'Rain – fata morgana</title>
+  <title>L'Rain – fata morgana – watch</title>
   <link rel="icon" type="image/png" href="Assets/Images/icecube_favicon.png">
-  <link rel="stylesheet" href="Assets/css/ochre-widgets.css">
   <link rel="stylesheet" href="Assets/css/modal.css">
   <style>
     *, *::before, *::after {
@@ -26,11 +25,9 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      /* Pastel fallback if WebGL is unavailable */
       background: linear-gradient(135deg, #f3c6d8 0%, #cdbfe8 40%, #b9c4ec 70%, #e7cdd6 100%);
     }
 
-    /* ── Interactive shader background ── */
     #bg {
       position: fixed;
       inset: 0;
@@ -40,22 +37,9 @@
       height: 100%;
     }
 
-    /* ── Ice texture layer (enlarged + blended over the haze) ── */
-    #ice {
-      display: none;              /* palette image is now the color source (in the shader) */
-      position: fixed;
-      inset: 0;
-      z-index: 1;                 /* above the shader, below the wordmarks */
-      background: url("Assets/Images/ochrestore_background_1.jpg") center center / cover no-repeat;
-      mix-blend-mode: soft-light; /* soft frosted mottle textured into the haze */
-      opacity: 0.4;               /* texture without washing the haze out */
-      filter: saturate(0.6) contrast(1.05);  /* let some of the warm texture read */
-      pointer-events: none;
-      will-change: transform;
-      transform: scale(2.05);     /* JS drives drift + cursor parallax on top of this */
-    }
+    #ice { display: none; }
 
-    /* ── Overlay (wordmarks + buttons) ── */
+    /* ── Overlay ── */
     .overlay {
       position: fixed;
       inset: 0;
@@ -64,88 +48,28 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3vh;
-      padding: 11vh 5vw;
-      pointer-events: none;   /* let the mouse reach the shader */
+      padding: 12vh 5vw;
+      pointer-events: none;
     }
 
     .overlay a,
-    .overlay button { pointer-events: auto; }
+    .overlay .video-wrap,
+    .overlay iframe { pointer-events: auto; }
 
-    .wm-top {
-      width: min(78vw, 680px);
-      max-height: 13vh;
-      height: auto;
-      display: block;
-      object-fit: contain;
-      filter: drop-shadow(0 2px 26px rgba(80, 40, 90, 0.30));
+    .video-wrap {
+      width: min(88vw, 900px, 108vh);
+      aspect-ratio: 16 / 9;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 12px 48px rgba(40, 20, 40, 0.5);
+      background: rgba(20, 10, 20, 0.4);
     }
 
-    /* cover + fata morgana + buttons stay grouped so the text reads as the album's */
-    .center-block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.8vh;
-    }
-
-    .cover {
-      width: min(42vw, 36vh, 440px);
-      height: auto;
-      display: block;
-      border-radius: 3px;
-      filter: drop-shadow(0 12px 48px rgba(40, 20, 40, 0.5));
-    }
-
-    .wm-bottom {
-      width: min(52vw, 480px);
-      max-height: 9vh;
-      height: auto;
-      display: block;
-      object-fit: contain;
-      filter: drop-shadow(0 2px 26px rgba(80, 40, 90, 0.30));
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 1rem;
-    }
-
-    /* "buy" is a real button element that opens the shop modal; the others
-       are links.
-       Both share this so the row reads as one set of controls. */
-    .btn {
-      display: inline-block;
-      color: #fff;
-      text-decoration: none;
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: clamp(1.05rem, 1.7vw, 1.35rem);
-      letter-spacing: 0.03em;
-      text-transform: lowercase;
-      text-shadow: 0 1px 14px rgba(70, 40, 80, 0.45);
-      opacity: 0.92;
-      background: none;
-      padding: 0;
-      cursor: pointer;
-      /* Underline space is reserved up front with a transparent border so
-         hovering only changes its colour — otherwise the row would shift. */
+    .video-wrap iframe {
+      width: 100%;
+      height: 100%;
       border: 0;
-      border-bottom: 1px solid transparent;
-      padding-bottom: 2px;
-      transition: opacity 0.2s, border-color 0.2s;
-    }
-
-    .btn:hover {
-      opacity: 1;
-      /* Same underline the nav uses to mark the current page */
-      border-bottom-color: rgba(255, 255, 255, 0.7);
-    }
-
-    .btn:focus-visible,
-    nav a:focus-visible,
-    nav button:focus-visible {
-      outline: 2px solid rgba(255, 255, 255, 0.8);
-      outline-offset: 3px;
+      display: block;
     }
 
     /* ── Nav ── */
@@ -154,7 +78,7 @@
       top: 0;
       left: 0;
       right: 0;
-      z-index: 20;
+      z-index: 30;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
@@ -164,8 +88,6 @@
 
     nav a,
     nav button,
-    /* .as-link (modal.css) resets border+padding at 0,0,1,1 — this
-       out-specifies it so the newsletter button underlines too. */
     nav button.as-link {
       color: #fff;
       text-decoration: none;
@@ -175,8 +97,6 @@
       text-transform: lowercase;
       opacity: 0.92;
       text-shadow: 0 1px 14px rgba(70, 40, 80, 0.45);
-      /* Transparent border reserves the underline's space so hovering only
-         changes its colour and the row never shifts. */
       border-bottom: 1px solid transparent;
       padding-bottom: 2px;
       transition: opacity 0.2s, border-color 0.2s;
@@ -184,53 +104,16 @@
 
     nav a:hover,
     nav button:hover,
-    nav button.as-link:hover {
+    nav button.as-link:hover,
+    nav a[aria-current="page"] {
       opacity: 1;
       border-bottom-color: rgba(255, 255, 255, 0.7);
     }
 
-    /* ── Shop modal internals (widget rules live in ochre-widgets.css) ── */
-    .modal-sub {
-      margin-bottom: 0.9rem;
-      text-align: center;
-      font-size: 0.95rem;
-      letter-spacing: 0.04em;
-      text-transform: lowercase;
-      opacity: 0.72;
-    }
-
-    /* Shared widget CSS is scoped under .panel / .cart-dock. On the shop page
-       the dock is fixed to a corner; inside this modal it just sits in flow. */
-    .modal .panel {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 6px;
-      padding: 0.2rem 1rem;
-    }
-
-    .modal .cart-dock {
-      margin-top: 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.5rem;
-    }
-
-    .modal .cart-dock .ochre-cart-container { align-items: stretch; }
-
-    .modal .cart-dock a.ochre-cart-toggle { text-align: center; }
-
-    @media (max-width: 640px) {
-      .modal .panel li.ochre-product {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.55rem;
-      }
-
-      .modal .panel .ochre-product-price-wrapper {
-        width: 100%;
-        justify-content: space-between;
-      }
+    nav a:focus-visible,
+    nav button:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.8);
+      outline-offset: 3px;
     }
 
     /* ── Social icons ── */
@@ -255,9 +138,7 @@
       transition: opacity 0.2s;
     }
 
-    .socials a:hover {
-      opacity: 1;
-    }
+    .socials a:hover { opacity: 1; }
 
     .socials svg {
       width: 18px;
@@ -274,28 +155,20 @@
   <nav>
     <a href="shop.html">Shop</a>
     <a href="tour.html">Tour</a>
-    <a href="watch.html">Watch</a>
+    <a href="watch.html" aria-current="page">Watch</a>
     <a href="http://lrain.ffm.to/fatamorgana" target="_blank">Listen</a>
     <button type="button" class="as-link" data-modal-open="modal-newsletter">Newsletter</button>
   </nav>
 
   <div class="overlay">
-    <img
-      class="wm-top"
-      src="Assets/Images/wordmark.png"
-      alt="L'Rain"
-    >
-    <div class="center-block">
-      <img
-        class="cover"
-        src="Assets/Images/cover.jpg"
-        alt="L'Rain – fata morgana album cover"
-      >
-      <img
-        class="wm-bottom"
-        src="Assets/Images/fatamorganawordmark.png"
-        alt="fata morgana"
-      >
+    <div class="video-wrap">
+      <iframe
+        src="https://www.youtube.com/embed/mjq3UA3HxxA?list=PL8eVhMRcRoqBxJPZ7EffLU9MhjT0-Cmtw&rel=0&modestbranding=1"
+        title="L'Rain – fata morgana videos"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
     </div>
   </div>
 
