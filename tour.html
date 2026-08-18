@@ -105,10 +105,7 @@
     main {
       position: relative;
       z-index: 10;
-      /* Wider than the other pages: the Bandsintown widget switches to its
-         stacked mobile layout when its CONTAINER (not the viewport) is
-         narrower than data-layout-breakpoint. */
-      max-width: 1040px;
+      max-width: 900px;
       margin: 0 auto;
       padding: 7.5rem 1.5rem 3rem;
       display: flex;
@@ -148,133 +145,86 @@
     }
 
     /* ══════════════════════════════════════════════════════════
-       Bandsintown widget styling.
+       Seated widget styling.
 
-       The widget renders inline into the page (no iframe, no shadow
-       DOM) but injects its own ~244-rule stylesheet at runtime. That
-       lands after this block, so it wins equal-specificity contests —
-       every rule below is therefore scoped under .bit-scope to
-       outrank its single-class selectors.
+       Renders inline (no iframe, no shadow DOM), so it is fully
+       styleable. It loads its own external stylesheet at runtime
+       (widget.seated.com/app-v3.css, per data-css-version="3"), which
+       lands after this block and therefore wins equal-specificity
+       contests. Every rule below is scoped under .seated-scope so the
+       extra class outranks its single-class selectors.
 
-       Its data-* attributes only accept solid hex colours, so the
-       transparent/Garamond treatment has to come from here.
+       Its defaults are black system-ui text with white filled buttons.
        ══════════════════════════════════════════════════════════ */
 
-    .bit-scope .bit-widget,
-    .bit-scope .bit-widget-container,
-    .bit-scope .bit-events-container,
-    .bit-scope .bit-upcoming-events-container,
-    .bit-scope .bit-event-lists {
+    .seated-scope .seated-events-table,
+    .seated-scope .seated-event-row,
+    .seated-scope .seated-event-description-cells,
+    .seated-scope .seated-event-date-cell,
+    .seated-scope .seated-event-venue-cell,
+    .seated-scope .seated-event-venue-name,
+    .seated-scope .seated-event-venue-location,
+    .seated-scope .seated-event-details-cell {
       background: transparent;
+      color: #fff;
       font-family: 'EB Garamond', Georgia, serif;
-      color: #fff;
     }
 
-    .bit-scope .bit-widget * {
-      font-family: 'EB Garamond', Georgia, serif !important;
-      border-color: rgba(255, 255, 255, 0.18);
-    }
-
-    /* Event rows: hairline dividers instead of the widget's grey blocks */
-    .bit-scope .bit-event {
-      background: transparent;
+    .seated-scope .seated-event-row {
       border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-      padding: 0.85rem 0;
+      padding: 0.9rem 0;
+      transition: background 0.2s;
     }
 
-    .bit-scope .bit-event:last-child { border-bottom: none; }
+    .seated-scope .seated-event-row:last-child { border-bottom: none; }
+    .seated-scope .seated-event-row:hover { background: rgba(255, 255, 255, 0.04); }
 
-    .bit-scope .bit-event:hover { background: rgba(255, 255, 255, 0.04); }
-
-    .bit-scope .bit-date,
-    .bit-scope .bit-mobile-date {
-      color: #fff;
-      background: transparent;
-      border: none;
+    .seated-scope .seated-event-date-cell {
       font-size: 0.95rem;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.05em;
       opacity: 0.85;
     }
 
-    .bit-scope .bit-titleWrapper,
-    .bit-scope .bit-venue {
-      color: #fff;
+    .seated-scope .seated-event-venue-name {
       font-size: 1.05rem;
       letter-spacing: 0.02em;
     }
 
-    .bit-scope .bit-location-under-desktop,
-    .bit-scope .bit-location-under-mobile {
-      color: #fff;
-      opacity: 0.7;
+    .seated-scope .seated-event-venue-location,
+    .seated-scope .seated-event-details-cell {
       font-size: 0.9rem;
+      opacity: 0.7;
     }
 
-    .bit-scope .bit-event-list-title,
-    .bit-scope .bit-nav-bar,
-    .bit-scope .bit-nav-bar-container {
+    /* Ticket links become the site's outline pills instead of filled
+       white blocks. Both class names are targeted — the widget puts
+       .seated-event-link and .seated-event-link1 on the same anchor. */
+    .seated-scope a.seated-event-link,
+    .seated-scope a.seated-event-link1 {
       color: #fff;
       background: transparent;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-      opacity: 0.65;
-    }
-
-    /* All CTAs become the site's outline pills */
-    .bit-scope .bit-button,
-    .bit-scope .bit-multi-ticket-button,
-    .bit-scope .bit-follow-section-cta,
-    .bit-scope .bit-play-my-city-cta {
-      color: #fff !important;
-      background: transparent !important;
-      border: 1px solid rgba(255, 255, 255, 0.55) !important;
-      border-radius: 100px !important;
-      padding: 0.38rem 1.05rem !important;
-      font-size: 0.9rem !important;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 100px;
+      padding: 0.38rem 1.05rem;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 0.9rem;
       letter-spacing: 0.05em;
-      text-transform: lowercase;
-      box-shadow: none !important;
+      text-decoration: none;
+      white-space: nowrap;
+      box-shadow: none;
       transition: background 0.2s, border-color 0.2s;
+      /* Seated's stylesheet forces uppercase with !important on this one
+         property — every other declaration here applies normally, so this
+         is the only place that needs to outrank it. The site sets its
+         labels lowercase everywhere else. */
+      text-transform: lowercase !important;
     }
 
-    .bit-scope .bit-button:hover,
-    .bit-scope .bit-multi-ticket-button:hover,
-    .bit-scope .bit-follow-section-cta:hover,
-    .bit-scope .bit-play-my-city-cta:hover {
-      background: rgba(255, 255, 255, 0.16) !important;
-      border-color: rgba(255, 255, 255, 0.85) !important;
+    .seated-scope a.seated-event-link:hover,
+    .seated-scope a.seated-event-link1:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.85);
     }
-
-    /* The two prompt blocks read as quiet asides, not banners */
-    .bit-scope .bit-follow-section-wrapper,
-    .bit-scope .bit-play-my-city-wrapper {
-      background: transparent;
-      border-top: 1px solid rgba(255, 255, 255, 0.14);
-      padding: 1.1rem 0 0.4rem;
-      margin-top: 0.6rem;
-    }
-
-    .bit-scope .bit-follow-section-heading-text,
-    .bit-scope .bit-play-my-city-heading-text {
-      color: #fff;
-      opacity: 0.75;
-      font-size: 0.98rem;
-      letter-spacing: 0.02em;
-      margin-bottom: 0.6rem;
-    }
-
-    .bit-scope .bit-offers,
-    .bit-scope .bit-offers-text,
-    .bit-scope .bit-rsvp,
-    .bit-scope .bit-rsvp-text,
-    .bit-scope .bit-details {
-      color: #fff;
-      background: transparent;
-    }
-
-    .bit-scope .bit-logo-link { opacity: 0.5; }
-    .bit-scope .bit-logo-link:hover { opacity: 0.85; }
 
     /* While the widget is fetching, and if it never arrives */
     #tour-status {
@@ -354,82 +304,12 @@
     <h1 class="page-title">Tour Dates</h1>
 
     <div class="panel">
-      <div class="bit-scope">
+      <div class="seated-scope">
         <p id="tour-status">Loading tour dates&hellip;</p>
 
-        <a class="bit-widget-initializer"
-          data-artist-name="id_14715635"
-          data-background-color="transparent"
-          data-separator-color="#FFFFFF"
-          data-text-color="#FFFFFF"
-          data-font="Georgia"
-          data-auto-style="false"
-
-          data-button-label-capitalization="capitalize"
-          data-location-capitalization="capitalize"
-          data-venue-capitalization="capitalize"
-          data-local-dates-position="tab"
-          data-social-share-icon="true"
-          data-display-limit="all"
-
-          data-date-format="MMM. D, YYYY"
-          data-date-orientation="horizontal"
-          data-date-border-color="#FFFFFF"
-          data-date-border-width="0px"
-          data-date-border-radius="10px"
-
-          data-event-ticket-cta-size="medium"
-          data-event-ticket-text="TICKETS"
-          data-event-ticket-cta-text-color="#FFFFFF"
-          data-event-ticket-cta-bg-color="transparent"
-          data-event-ticket-cta-border-color="#FFFFFF"
-          data-event-ticket-cta-border-width="1px"
-          data-event-ticket-cta-border-radius="100px"
-
-          data-sold-out-button-text-color="#FFFFFF"
-          data-sold-out-button-background-color="transparent"
-          data-sold-out-button-border-color="#FFFFFF"
-          data-sold-out-button-clickable="true"
-
-          data-event-rsvp-position="left"
-          data-event-rsvp-cta-size="medium"
-          data-event-rsvp-text="REMIND ME"
-          data-event-rsvp-cta-text-color="#FFFFFF"
-          data-event-rsvp-cta-bg-color="transparent"
-          data-event-rsvp-cta-border-color="#FFFFFF"
-          data-event-rsvp-cta-border-width="1px"
-          data-event-rsvp-cta-border-radius="100px"
-
-          data-follow-section-position="top"
-          data-follow-section-alignment="center"
-          data-follow-section-header-text="Get updates on new shows, new music, and more."
-          data-follow-section-cta-size="medium"
-          data-follow-section-cta-text="FOLLOW"
-          data-follow-section-cta-icon="true"
-          data-follow-section-cta-text-color="#FFFFFF"
-          data-follow-section-cta-bg-color="transparent"
-          data-follow-section-cta-border-color="#FFFFFF"
-          data-follow-section-cta-border-width="1px"
-          data-follow-section-cta-border-radius="100px"
-
-          data-play-my-city-position="bottom"
-          data-play-my-city-alignment="Center"
-          data-play-my-city-header-text="Don&rsquo;t see a show near you?"
-          data-play-my-city-cta-size="medium"
-          data-play-my-city-cta-text="REQUEST A SHOW"
-          data-play-my-city-cta-icon="true"
-          data-play-my-city-cta-text-color="#FFFFFF"
-          data-play-my-city-cta-bg-color="transparent"
-          data-play-my-city-cta-border-color="#FFFFFF"
-          data-play-my-city-cta-border-width="1px"
-          data-play-my-city-cta-border-radius="100px"
-
-          data-language="en"
-          data-layout-breakpoint="700"
-          data-app-id="ea47ba0b0efe5ba700d398762362e149"
-          data-bit-logo-position="bottomRight"
-          data-bit-logo-color="#FFFFFF"
-        ></a>
+        <div id="seated-55fdf2c0"
+             data-artist-id="f4c930c4-e92a-4555-ba02-3d8638dfbff8"
+             data-css-version="3"></div>
       </div>
     </div>
 
@@ -470,8 +350,8 @@
   <script src="Assets/js/modals.js"></script>
   <script src="Assets/js/nav.js"></script>
 
-  <!-- Bandsintown widget -->
-  <script charset="utf-8" src="https://widgetv3.bandsintown.com/main.min.js"></script>
+  <!-- Seated widget -->
+  <script src="https://widget.seated.com/app.js"></script>
 
   <script>
   (function () {
@@ -479,12 +359,12 @@
     // that so the loading line can be swapped for a real message if it never
     // arrives (blocked script, no dates listed).
     var status = document.getElementById('tour-status');
-    var scope  = document.querySelector('.bit-scope');
+    var scope  = document.querySelector('.seated-scope');
     var tries  = 0;
 
     var poll = setInterval(function () {
       tries++;
-      if (scope.querySelector('.bit-event, .bit-widget')) {
+      if (scope.querySelector('.seated-event-row')) {
         status.remove();
         clearInterval(poll);
       } else if (tries > 20) {          // ~10s
