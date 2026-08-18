@@ -1,0 +1,29 @@
+# Cloudflare Pages redirects.  Format: <from> <to> <status>
+# Only path matching is supported here — the apex -> www redirect is a
+# Cloudflare Redirect Rule, since _redirects cannot match on hostname.
+
+# ── Routes from the previous (Gatsby) site ──
+# It used trailing slashes, so inbound links exist in both forms.
+/tours      /tour     301
+/tours/     /tour     301
+/videos     /watch    301
+/videos/    /watch    301
+/home       /         301
+/home/      /         301
+
+# No equivalent on the current site; send these to the homepage rather
+# than let them 404, since they carry inbound links from press coverage.
+/about      /         301
+/about/     /         301
+/press      /         301
+/press/     /         301
+
+# ── Paths people type or guess (never existed, but cheap to catch) ──
+/store      /shop     301
+/store/     /shop     301
+/merch      /shop     301
+/merch/     /shop     301
+/live       /tour     301
+/live/      /tour     301
+/shows      /tour     301
+/shows/     /tour     301
