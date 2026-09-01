@@ -1,8 +1,24 @@
 {
   "socials": [
-    { "platform": "instagram", "url": "https://www.instagram.com/turrelljames" },
-    { "platform": "twitter",   "url": "https://x.com/lrain0000?lang=en" },
-    { "platform": "youtube",   "url": "https://www.youtube.com/@lrain" },
-    { "platform": "spotify",   "url": "https://open.spotify.com/artist/68BVYIej5jGdIh8au5qELn" }
+    {
+      "platform": "instagram",
+      "url": "https://www.instagram.com/turrelljames"
+    },
+    {
+      "platform": "twitter",
+      "url": "https://x.com/lrain0000?lang=en"
+    },
+    {
+      "platform": "youtube",
+      "url": "https://www.youtube.com/@lrain"
+    },
+    {
+      "platform": "spotify",
+      "url": "https://open.spotify.com/artist/68BVYIej5jGdIh8au5qELn"
+    },
+    {
+      "platform": "tiktok",
+      "url": "https://www.tiktok.com/@lrain000"
+    }
   ]
 }
