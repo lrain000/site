@@ -1,0 +1,28 @@
+{
+  "featured": {
+    "enabled": true,
+    "title": "fata morgana",
+    "note": "out now",
+    "cover": "Assets/Images/cover.jpg",
+    "wordmark": "Assets/Images/fatamorganawordmark.png",
+    "source": "ochre",
+    "productIds": [201989153, 201989152, 201989150, 201994028]
+  },
+
+  "catalogueHeading": "More from L'Rain",
+
+  "sections": [
+    {
+      "title": "I Killed Your Dog",
+      "art": "Assets/Images/ikyd_cover.jpg",
+      "source": "ochre",
+      "productIds": [201369620, 201369624, 201369621, 201369622]
+    },
+    {
+      "title": "Fatigue",
+      "art": "Assets/Images/fatigue_cover.jpg",
+      "source": "ochre",
+      "productIds": [201298031, 201298032, 201298028, 201298029]
+    }
+  ]
+}
