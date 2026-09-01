@@ -27,3 +27,10 @@
 /live/      /tour     301
 /shows      /tour     301
 /shows/     /tour     301
+
+# ── Short links to campaigns off-site ──
+# 302, not 301: these point at time-limited campaigns, and a 301 would be
+# cached in browsers long after the event — so reusing /rsvp for the next
+# one would send returning visitors to the dead page.
+/rsvp       https://drop.cobrand.com/d/LRain/hifi   302
+/rsvp/      https://drop.cobrand.com/d/LRain/hifi   302
