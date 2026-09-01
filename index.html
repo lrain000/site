@@ -148,6 +148,30 @@
       outline-offset: 3px;
     }
 
+
+    /* ── Splash (content/home.json; hidden unless enabled) ── */
+    #splash[hidden] { display: none; }
+
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .splash-media {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    body.splash-open { overflow: hidden; }
+
     /* ── Nav ── */
     nav {
       position: fixed;
@@ -279,6 +303,9 @@
   </style>
 </head>
 <body>
+
+  <!-- Splash photo/video, rendered by content.js from content/home.json -->
+  <div id="splash" hidden></div>
   <!-- Meta Pixel (ID 537348656601210). Script is shared; the noscript
        fallback must be inline since it only renders without JS. -->
   <script src="Assets/js/meta-pixel.js"></script>

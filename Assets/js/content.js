@@ -11,6 +11,17 @@
 
   var SOCIAL_JSON = '/content/social.json';
   var SHOP_JSON   = '/content/shop.json';
+  var HOME_JSON   = '/content/home.json';
+
+  /* Used only if social.json is missing or malformed. The icon row used to be
+     hardcoded in every page, so losing it to one bad CMS save would be a
+     regression — this keeps the floor at the four networks we shipped with. */
+  var DEFAULT_SOCIALS = [
+    { platform: 'instagram', url: 'https://www.instagram.com/turrelljames' },
+    { platform: 'twitter',   url: 'https://x.com/lrain0000?lang=en' },
+    { platform: 'youtube',   url: 'https://www.youtube.com/@lrain' },
+    { platform: 'spotify',   url: 'https://open.spotify.com/artist/68BVYIej5jGdIh8au5qELn' }
+  ];
 
   function getJSON(url) {
     return fetch(url, { cache: 'no-cache' }).then(function (r) {
@@ -133,10 +144,68 @@
     });
   }
 
+  /* ── Splash ──────────────────────────────────────────────────────────
+     A full-screen photo or video shown before the homepage. Off unless the
+     artist team enables it and uploads media, so the default is no change.
+
+     Shown once per browsing session — sessionStorage, not localStorage, so
+     it returns on a genuine revisit but not when moving between pages. Any
+     click, tap or key dismisses it, and a video also dismisses when it ends.
+     Skipped entirely for prefers-reduced-motion when the media is video. */
+  function renderSplash(data) {
+    var host = document.getElementById('splash');
+    var s = data && data.splash;
+    if (!host || !s || s.enabled === false) return;
+
+    var isVideo = s.type === 'video' && s.video;
+    var media   = isVideo ? s.video : s.image;
+    if (!media) return;
+
+    if (isVideo && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (!s.image) return;                       // nothing safe to show
+      isVideo = false; media = s.image;           // fall back to the poster still
+    }
+
+    try {
+      if (sessionStorage.getItem('splash-seen')) return;
+    } catch (e) { /* private mode: just show it */ }
+
+    host.innerHTML = isVideo
+      ? '<video class="splash-media" src="' + media + '" autoplay muted playsinline' +
+        (s.image ? ' poster="' + s.image + '"' : '') + '></video>'
+      : '<img class="splash-media" src="' + media + '" alt="">';
+    host.hidden = false;
+    document.body.classList.add('splash-open');
+
+    function dismiss() {
+      if (host.hidden) return;
+      host.hidden = true;
+      host.innerHTML = '';
+      document.body.classList.remove('splash-open');
+      try { sessionStorage.setItem('splash-seen', '1'); } catch (e) {}
+      document.removeEventListener('keydown', dismiss);
+    }
+
+    host.addEventListener('click', dismiss);
+    document.addEventListener('keydown', dismiss);
+    var vid = host.querySelector('video');
+    if (vid) vid.addEventListener('ended', dismiss);
+    if (s.autoDismissSeconds) setTimeout(dismiss, s.autoDismissSeconds * 1000);
+  }
+
   /* ── Boot ─────────────────────────────────────────────────────────── */
-  getJSON(SOCIAL_JSON).then(renderSocials).catch(function (e) {
-    console.warn('socials: keeping existing markup —', e.message);
-  });
+  getJSON(SOCIAL_JSON)
+    .then(renderSocials)
+    .catch(function (e) {
+      console.warn('social.json unavailable, using defaults —', e.message);
+      renderSocials({ socials: DEFAULT_SOCIALS });
+    });
+
+  if (document.getElementById('splash')) {
+    getJSON(HOME_JSON)
+      .then(renderSplash)
+      .catch(function (e) { console.warn('home.json unavailable —', e.message); });
+  }
 
   if (document.getElementById('shop-featured')) {
     getJSON(SHOP_JSON)
