@@ -1,0 +1,7 @@
+# Deploy from this folder:  npx wrangler deploy
+#
+# No secrets here — they are set once with `wrangler secret put` and stored
+# by Cloudflare, never in the repo. See README.md.
+name = "lrain-cms-auth"
+main = "worker.js"
+compatibility_date = "2026-08-14"

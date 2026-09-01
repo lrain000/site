@@ -1,0 +1,9 @@
+{
+  "splash": {
+    "enabled": false,
+    "type": "image",
+    "image": "",
+    "video": "",
+    "autoDismissSeconds": 0
+  }
+}

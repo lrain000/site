@@ -1,0 +1,143 @@
+# Content manager for lrain.info
+#
+# Auth: GitHub backend. The label's site uses Netlify's git-gateway, which
+# only works on Netlify — this site is on Cloudflare Pages, so sign-in goes
+# through GitHub via a small OAuth worker (see base_url below).
+backend:
+  name: github
+  repo: lrain000/site
+  branch: main
+  # Cloudflare Worker running sveltia-cms-auth. Must be deployed and the
+  # GitHub OAuth app's callback pointed at it before login will work.
+  base_url: https://lrain-cms-auth.lrainwebsite.workers.dev
+
+site_url: https://www.lrain.info
+display_url: https://www.lrain.info
+
+# Uploads are committed straight into the repo, so keep video compressed —
+# a raw 1080p export runs 20MB+, which bloats the repo and can fail upload.
+media_folder: "Assets/Images/uploads"
+public_folder: "/Assets/Images/uploads"
+
+collections:
+  - name: "shop"
+    label: "Shop"
+    files:
+      - name: "shop"
+        label: "Shop page"
+        file: "content/shop.json"
+        fields:
+          - label: "Featured release"
+            name: "featured"
+            widget: "object"
+            fields:
+              - label: "Show the featured release"
+                name: "enabled"
+                widget: "boolean"
+                default: true
+                hint: "Turn this off between album cycles. The shop then opens straight into the catalogue instead of leading with a record."
+              - {label: "Title", name: "title", widget: "string"}
+              - label: "Note under the title"
+                name: "note"
+                widget: "string"
+                required: false
+                hint: 'e.g. "out now", or "out august 14 · pre-order" before release.'
+              - {label: "Cover image", name: "cover", widget: "image"}
+              - label: "Wordmark image"
+                name: "wordmark"
+                widget: "image"
+                required: false
+                hint: "Optional. The album's logo, shown under the cover. Without it the title is shown as text."
+              - label: "Store"
+                name: "source"
+                widget: "select"
+                options: ["ochre"]
+                default: "ochre"
+              - label: "Product IDs"
+                name: "productIds"
+                widget: "list"
+                field: {label: "ID", name: "id", widget: "number", value_type: "int"}
+                hint: "From the Ochre store: the release_format ID with 20 in front. Format 1989153 becomes 201989153."
+
+          - label: "Catalogue heading"
+            name: "catalogueHeading"
+            widget: "string"
+            required: false
+            hint: 'Sits above the other records. With no featured release, "More from L\Rain" reads oddly — try "Records".'
+
+          - label: "Catalogue sections"
+            name: "sections"
+            widget: "list"
+            summary: "{{fields.title}}"
+            hint: "One per release, or per merch group. Reorder by dragging."
+            fields:
+              - {label: "Title", name: "title", widget: "string"}
+              - {label: "Cover art", name: "art", widget: "image", required: false}
+              - label: "Store"
+                name: "source"
+                widget: "select"
+                options: ["ochre"]
+                default: "ochre"
+              - label: "Product IDs"
+                name: "productIds"
+                widget: "list"
+                field: {label: "ID", name: "id", widget: "number", value_type: "int"}
+
+  - name: "social"
+    label: "Social links"
+    files:
+      - name: "social"
+        label: "Social links"
+        file: "content/social.json"
+        fields:
+          - label: "Links"
+            name: "socials"
+            widget: "list"
+            summary: "{{fields.platform}}"
+            hint: "Shown as icons at the foot of every page, in this order. Drag to reorder."
+            fields:
+              - label: "Platform"
+                name: "platform"
+                widget: "select"
+                options: ["instagram", "twitter", "tiktok", "youtube", "spotify", "facebook", "bandcamp"]
+                hint: "Picks the icon. To add a network that isn't listed, a developer needs to add its icon first."
+              - {label: "Link", name: "url", widget: "string"}
+
+  - name: "home"
+    label: "Homepage"
+    files:
+      - name: "home"
+        label: "Splash screen"
+        file: "content/home.json"
+        fields:
+          - label: "Splash"
+            name: "splash"
+            widget: "object"
+            fields:
+              - label: "Show a splash screen"
+                name: "enabled"
+                widget: "boolean"
+                default: false
+                hint: "A full-screen photo or video before the homepage. Shown once per visit; any click or key dismisses it."
+              - label: "Photo or video"
+                name: "type"
+                widget: "select"
+                options: ["image", "video"]
+                default: "image"
+              - label: "Photo"
+                name: "image"
+                widget: "image"
+                required: false
+                hint: "Used when the type is Photo. Also the still shown while a video loads."
+              - label: "Video"
+                name: "video"
+                widget: "file"
+                required: false
+                hint: "Used when the type is Video. MP4 (H.264), muted, ideally under ~5MB — it autoplays. Visitors who ask for reduced motion see the photo instead."
+              - label: "Auto-dismiss after (seconds)"
+                name: "autoDismissSeconds"
+                widget: "number"
+                required: false
+                default: 0
+                value_type: "int"
+                hint: "0 means it waits for a click. A video also dismisses itself when it finishes."
